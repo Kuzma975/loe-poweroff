@@ -5,6 +5,8 @@ import requests
 from datetime import datetime, timedelta, date
 import json
 import os
+from config import LOE_URL, GROUP_ID, STATE_FILE
+from modules import scrapper
 
 def reed_of_tags(data):
   return data.replace('<p>', '').replace('</p>', '').replace('<div>', '').replace('<b>', '').replace('</b>', '').replace('</div>', '')
@@ -45,6 +47,8 @@ def print_outage_time(begins, ends):
 
 def parse_interval(start_str, end_str, target_date):
   time_fmt = '%H:%M'
+  if end_str == '24:00':
+    end_str = '23:59'
   t_start = datetime.strptime(start_str, time_fmt).time()
   t_end = datetime.strptime(end_str, time_fmt).time()
   dt_start = datetime.combine(target_date, t_start)
@@ -86,16 +90,11 @@ today = date.today()
 tomorrow = today + timedelta(days=1)
 parsed_schedule = []
 raw_schedule = []
-file_name = "outage.json"
+file_name = STATE_FILE
 
-group_number = '5.1'
-api_url = "https://api.loe.lviv.ua/api/menus?page=1&type=photo-grafic"
-headers = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
-}
+group_number = GROUP_ID
 
-response = requests.get(api_url, headers=headers)
-data = response.json()['hydra:member'][0]['menuItems']
+data = scrapper.fetch_data(LOE_URL)
 
 today_item = get_specific_item(data, 'Today')
 tomorrow_item = get_specific_item(data, 'Tomorrow')
