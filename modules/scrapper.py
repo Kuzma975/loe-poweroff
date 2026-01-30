@@ -7,4 +7,19 @@ headers = {
 }
 
 def fetch_data(url):
-  return requests.get(url, headers=headers).json()['hydra:member'][0]['menuItems']
+  retry = True
+  retry_count = 3
+  while retry:
+    retry_count -= 1
+    plainJson = requests.get(url, headers=headers).json()
+    try:
+      if type(plainJson) == type(list()):
+        response = plainJson[0]['menuItems']
+        return response
+      else:
+        response = plainJson['hydra:member'][0]['menuItems']
+        return response
+    except Exception as e:
+      print(f"Failed to retrieve schedule {plainJson}: {e}")
+    retry = False if retry_count < 1 else True
+  return {}
